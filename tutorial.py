@@ -93,10 +93,20 @@ class Player(pygame.sprite.Sprite):
             self.animation_count = 0
 
     def loop(self,fps):
-        #self.y_vel += min(1,(self.fall_count/fps)*self.GRAVITY)
+        self.y_vel += min(1,(self.fall_count/fps)*self.GRAVITY)
         self.move(self.x_vel,self.y_vel)
         self.update_sprite()
         self.fall_count +=1 
+
+    #### collision functions ####
+    def landed(self):
+        self.fall_count = 0
+        self.y_vel = 0
+        self.jump_count = 0
+    def hit_head(self):
+        self.count=0
+        self.y_vel *= -1
+    ####END####
    #ANIMATING THE PLAYER:
     def update_sprite(self):
         sprite_sheet = "idle"
@@ -139,8 +149,25 @@ class Block(Object):
         self.image.blit(block,(0,0))
         self.mask = pygame.mask.from_surface(self.image)
 #####END########
+
+###PIXEL PERFECT COLLISION(VERTICAL)####
+def handle_vertical_collision(player,objects,dy):
+    colllided_objects =[]
+    for obj in objects:
+        if pygame.sprite.collide_mask(player,obj):
+            if dy > 0:
+                player.rect.bottom = obj.rect.top
+                player.landed()
+            if dy < 0:
+                player.rect.top = obj.rect.bottom
+                player.hit_head()
+        colllided_objects.append(obj)
+    return colllided_objects
+
+
+#####END######
 #MOVING THE PLAYER##
-def handle_move(player):
+def handle_move(player,objects):
     keys = pygame.key.get_pressed()
     
     player.x_vel = 0
@@ -148,6 +175,7 @@ def handle_move(player):
         player.move_left(PLAYER_VELOCITY)
     if keys[pygame.K_RIGHT]:
         player.move_right(PLAYER_VELOCITY)
+    handle_vertical_collision(player,objects,player.y_vel)
 
 ##### END ###### 
 
@@ -196,7 +224,7 @@ def main(window):
                 break
 
         player.loop(FPS)
-        handle_move(player)
+        handle_move(player,floor)
         draw(window,background,bg_image,player,floor)
     pygame.quit()
     quit()
