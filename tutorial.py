@@ -140,8 +140,8 @@ class Player(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.sprite)
 
 
-    def draw(self,win):
-        win.blit(self.sprite,(self.rect.x,self.rect.y))
+    def draw(self,win,offset_x):
+        win.blit(self.sprite,(self.rect.x - offset_x,self.rect.y))
 ##### END#######
 
 ### Another class ###
@@ -153,8 +153,8 @@ class Object(pygame.sprite.Sprite):
         self.width = width
         self.height = height
         self.name = name
-    def draw(self,win):
-        win.blit(self.image,(self.rect.x,self.rect.y))
+    def draw(self,win,offset_x):
+        win.blit(self.image,(self.rect.x - offset_x,self.rect.y))
 ####END#########
 
 ####ADDING TERRAIN AND BLOCK####
@@ -208,14 +208,14 @@ def get_background(name):
 
 
  #Creating a function to draw the background:
-def draw(window,background,bg_image,player,objects):
+def draw(window,background,bg_image,player,objects,offset_x):
     for tile in background:
         window.blit(bg_image,tile)
     
     for obj in objects:
-        obj.draw(window)
+        obj.draw(window,offset_x)
     
-    player.draw(window)
+    player.draw(window,offset_x)
     
     pygame.display.update()            
 
@@ -230,6 +230,8 @@ def main(window):
 
     player = Player(100,100,50,50)
     floor = [Block(i*block_size,HEIGHT-block_size,block_size) for i in range(-WIDTH//block_size,(WIDTH*2)//block_size)]
+    offset_x = 0
+    scroll_area_width = 200
     run = True
     while run:
         clock.tick(FPS)
@@ -244,7 +246,11 @@ def main(window):
 
         player.loop(FPS)
         handle_move(player,floor)
-        draw(window,background,bg_image,player,floor)
+        draw(window,background,bg_image,player,floor,offset_x)
+        ### SCROLLING BACKGROUND####
+        if ((player.rect.right - offset_x >= WIDTH - scroll_area_width) and player.x_vel >0 ) or (
+        (player.rect.left - offset_x <= WIDTH - scroll_area_width) and player.x_vel < 0):
+            offset_x += player.x_vel
     pygame.quit()
     quit()
 if __name__== "__main__":
